@@ -58,6 +58,7 @@ const Input = (props) => {
 const mapDispatchToProps = (dispatch) => {
   return {
     postMessage: (message) => {
+      console.log("postmessage" , message)
       dispatch(postMessage(message));
     },
   };
