@@ -73,8 +73,6 @@ export const fetchConversations = () => async (dispatch) => {
   try {
     const { data } = await axios.get("/api/conversations");
 
-    console.log(data);
-
     dispatch(gotConversations(data));
   } catch (error) {
     console.error(error);
@@ -98,13 +96,9 @@ const sendMessage = (data, body) => {
 // conversationId will be set to null if its a brand new conversation
 export const postMessage = (body) => async (dispatch) => {
   try {
-    console.log("body:", body)
     const data = await saveMessage(body);
-    console.log("data:", data)
-    console.log("datamessage:", data.message)
 
     if (!body.conversationId) {
-      console.log("new conversation" , data.message)
       dispatch(addConversation(body.recipientId, data.message));
     } else {
       dispatch(setNewMessage(data.message));
