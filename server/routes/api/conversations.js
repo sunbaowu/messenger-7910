@@ -1,6 +1,6 @@
 const router = require("express").Router();
 const { User, Conversation, Message } = require("../../db/models");
-const { Op } = require("sequelize");
+const { Op, Sequelize } = require("sequelize");
 const onlineUsers = require("../../onlineUsers");
 
 // get all conversations for a user, include latest message text for preview, and all messages
@@ -73,6 +73,30 @@ router.get("/", async (req, res, next) => {
     }
 
     res.json(conversations);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// update all the unread messages not sent by current user in the conversation to read
+router.patch("/:conversationId/read", async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.sendStatus(401);
+    }
+    const userId = req.user.id;
+    const { conversationId } = req.params;
+    const readCount = await Message.update({
+      read: true,
+    }, {
+      where: {
+        conversationId: parseInt(conversationId),
+        read: false,
+        [Op.not]: [{ senderId: userId }]
+      },
+    });
+
+    res.json({ read: readCount[0] });
   } catch (error) {
     next(error);
   }
