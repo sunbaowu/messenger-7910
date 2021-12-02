@@ -99,10 +99,6 @@ const saveReadMessages = async (conversationId) => {
   return data.read;
 }
 
-const sendReadMessages = (conversationId, userId) => {
-  console.log("sendRead", conversationId, userId);
-};
-
 // message format to send: {recipientId, text, conversationId}
 // conversationId will be set to null if its a brand new conversation
 export const postMessage = (body, userId) => async (dispatch) => {
@@ -138,7 +134,6 @@ export const readMessages = (conversationId, userId) => async (dispatch) => {
 
     if (read > 0) {
       dispatch(setReadMessages(conversationId, userId));
-      sendReadMessages(conversationId, userId);
     }
   } catch (error) {
     console.error(error);

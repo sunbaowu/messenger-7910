@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import { Box } from "@material-ui/core";
 import { Input, Header, Messages } from "./index";
@@ -23,14 +23,25 @@ const useStyles = makeStyles(() => ({
 
 const ActiveChat = (props) => {
   const classes = useStyles();
-  const { user, setMessagesToRead } = props;
-  const conversation = props.conversation || {};
+  const { user, readMessages } = props;
+  const conversation = useMemo(() => (props.conversation || {}), [props.conversation]);
+  const timer = useRef(null);
 
   useEffect(() => {
-    if (conversation.unreadCount && user.id) {
-      setMessagesToRead(conversation, user.id);
+    if (timer.current) {
+      clearTimeout(timer.current);
     }
-  }, [conversation, user])
+    if (conversation.unreadCount && user.id) {
+      timer.current = setTimeout(() => {
+        readMessages(conversation, user.id);
+      }, 2000);
+    }
+    return () => {
+      if (timer.current) {
+        clearTimeout(timer.current);
+      }
+    }
+  }, [conversation, user, readMessages]);
 
   return (
     <Box className={classes.root}>
@@ -72,7 +83,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    setMessagesToRead: (conversation, userId) => {
+    readMessages: (conversation, userId) => {
       if (conversation.unreadCount > 0) {
         dispatch(readMessages(conversation.id, userId));
       }

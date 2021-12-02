@@ -6,7 +6,6 @@ import {
   removeOfflineUserFromStore,
   addMessageToStore,
   readMessagesInStore,
-  readByReceiverMessagesInStore,
 } from "./utils/reducerFunctions";
 
 // ACTIONS
@@ -14,7 +13,6 @@ import {
 const GET_CONVERSATIONS = "GET_CONVERSATIONS";
 const SET_MESSAGE = "SET_MESSAGE";
 const READ_MESSAGES = "READ_MESSAGES"
-const READ_BY_RECEIVER_MESSAGES = "READ_BY_RECEIVER_MESSAGES";
 const ADD_ONLINE_USER = "ADD_ONLINE_USER";
 const REMOVE_OFFLINE_USER = "REMOVE_OFFLINE_USER";
 const SET_SEARCHED_USERS = "SET_SEARCHED_USERS";
@@ -47,13 +45,6 @@ export const setReadMessages = (conversationId, userId) => {
   };
 };
 
-export const setReadByReceiverMessages = (conversationId, userId) => {
-  return {
-    type: READ_BY_RECEIVER_MESSAGES,
-    conversationId,
-    userId
-  };
-};
 
 export const addOnlineUser = (id) => {
   return {
@@ -100,14 +91,10 @@ const reducer = (state = [], action) => {
       return addMessageToStore(state, action.payload, action.userId);
     case READ_MESSAGES:
       return readMessagesInStore(state, action.conversationId, action.userId);
-    case READ_BY_RECEIVER_MESSAGES:
-      return readByReceiverMessagesInStore(state, action.conversationId, action.userId);
-    case ADD_ONLINE_USER: {
+    case ADD_ONLINE_USER:
       return addOnlineUserToStore(state, action.id);
-    }
-    case REMOVE_OFFLINE_USER: {
+    case REMOVE_OFFLINE_USER:
       return removeOfflineUserFromStore(state, action.id);
-    }
     case SET_SEARCHED_USERS:
       return addSearchedUsersToStore(state, action.users);
     case CLEAR_SEARCHED_USERS:

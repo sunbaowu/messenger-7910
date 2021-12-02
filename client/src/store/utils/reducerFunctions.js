@@ -27,14 +27,13 @@ export const addMessageToStore = (state, payload, userId) => {
 
   return state.map((convo) => {
     if (convo.id === message.conversationId) {
-      // making sure it is a pure function
-      const newConvo = {
-        ...convo,
-        messages: [...convo.messages, message],
-        latestMessageText: message.text
-      };
-      newConvo.unreadCount = countUnreadMessages(newConvo, userId);
-      return newConvo;
+      const convoCopy = { ...convo };
+
+      convoCopy.messages.push(message);
+      convoCopy.latestMessageText = message.text;
+      convoCopy.unreadCount = countUnreadMessages(convoCopy, userId);
+
+      return convoCopy;
     } else {
       return convo;
     }
@@ -96,15 +95,13 @@ export const setConvosToStore = (conversations, userId) => {
 export const addNewConvoToStore = (state, recipientId, message) => {
   return state.map((convo) => {
     if (convo.otherUser.id === recipientId) {
-      //making sure it is a pure function
-      const newConvo = {
-        ...convo,
-        messages: [...convo.messages, message],
-        latestMessageText: message.text,
-        unreadCount: 0,
-      };
+      const convoCopy = { ...convo };
 
-      return newConvo;
+      convoCopy.messages.push(message);
+      convoCopy.latestMessageText = message.text;
+      convoCopy.unreadCount = 0;
+
+      return convoCopy;
     } else {
       return convo;
     }
@@ -121,27 +118,6 @@ export const readMessagesInStore = (state, conversationId, userId) => {
 
       newConvo.messages.forEach((message) => {
         if (message.senderId !== userId && message.read === false) {
-          message.read = true;
-        }
-      });
-
-      return newConvo;
-    } else {
-      return convo;
-    }
-  });
-};
-
-
-export const readByReceiverMessagesInStore = (state, conversationId, userId) => {
-  return state.map((convo) => {
-    if (convo.id === conversationId) {
-      const newConvo = {
-        ...convo
-      };
-
-      newConvo.messages.forEach((message) => {
-        if (message.senderId === userId && message.read === false) {
           message.read = true;
         }
       });
