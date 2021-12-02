@@ -47,11 +47,11 @@ const ChatContent = (props) => {
           {latestMessageText}
         </Typography>
       </Box>
-      <Box>
+      {unreadCount > 0 ? (<Box>
         <Typography className={classes.unreadCount}>
           {unreadCount || 0}
         </Typography>
-      </Box>
+      </Box>) : <></>}
     </Box>
   );
 };
