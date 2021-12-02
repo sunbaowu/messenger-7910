@@ -1,15 +1,20 @@
 import {
+  setConvosToStore,
   addNewConvoToStore,
   addOnlineUserToStore,
   addSearchedUsersToStore,
   removeOfflineUserFromStore,
   addMessageToStore,
+  readMessagesInStore,
+  readByReceiverMessagesInStore,
 } from "./utils/reducerFunctions";
 
 // ACTIONS
 
 const GET_CONVERSATIONS = "GET_CONVERSATIONS";
 const SET_MESSAGE = "SET_MESSAGE";
+const READ_MESSAGES = "READ_MESSAGES"
+const READ_BY_RECEIVER_MESSAGES = "READ_BY_RECEIVER_MESSAGES";
 const ADD_ONLINE_USER = "ADD_ONLINE_USER";
 const REMOVE_OFFLINE_USER = "REMOVE_OFFLINE_USER";
 const SET_SEARCHED_USERS = "SET_SEARCHED_USERS";
@@ -18,17 +23,35 @@ const ADD_CONVERSATION = "ADD_CONVERSATION";
 
 // ACTION CREATORS
 
-export const gotConversations = (conversations) => {
+export const gotConversations = (conversations, userId) => {
   return {
     type: GET_CONVERSATIONS,
     conversations,
+    userId
   };
 };
 
-export const setNewMessage = (message, sender) => {
+export const setNewMessage = (message, sender, userId) => {
   return {
     type: SET_MESSAGE,
     payload: { message, sender: sender || null },
+    userId
+  };
+};
+
+export const setReadMessages = (conversationId, userId) => {
+  return {
+    type: READ_MESSAGES,
+    conversationId,
+    userId
+  };
+};
+
+export const setReadByReceiverMessages = (conversationId, userId) => {
+  return {
+    type: READ_BY_RECEIVER_MESSAGES,
+    conversationId,
+    userId
   };
 };
 
@@ -72,13 +95,13 @@ export const addConversation = (recipientId, newMessage) => {
 const reducer = (state = [], action) => {
   switch (action.type) {
     case GET_CONVERSATIONS:
-      const conversations = [...action.conversations];
-      conversations.forEach(conversation => {
-        conversation.messages = conversation.messages.reverse();
-      });
-      return conversations;
+      return setConvosToStore(action.conversations, action.userId);
     case SET_MESSAGE:
-      return addMessageToStore(state, action.payload);
+      return addMessageToStore(state, action.payload, action.userId);
+    case READ_MESSAGES:
+      return readMessagesInStore(state, action.conversationId, action.userId);
+    case READ_BY_RECEIVER_MESSAGES:
+      return readByReceiverMessagesInStore(state, action.conversationId, action.userId);
     case ADD_ONLINE_USER: {
       return addOnlineUserToStore(state, action.id);
     }

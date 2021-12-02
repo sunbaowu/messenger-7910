@@ -5,6 +5,7 @@ import {
   addConversation,
   setNewMessage,
   setSearchedUsers,
+  setReadMessages,
 } from "../conversations";
 import { gotUser, setFetchingStatus } from "../user";
 
@@ -69,11 +70,11 @@ export const logout = (id) => async (dispatch) => {
 
 // CONVERSATIONS THUNK CREATORS
 
-export const fetchConversations = () => async (dispatch) => {
+export const fetchConversations = (userId) => async (dispatch) => {
   try {
     const { data } = await axios.get("/api/conversations");
 
-    dispatch(gotConversations(data));
+    dispatch(gotConversations(data, userId));
   } catch (error) {
     console.error(error);
   }
@@ -92,16 +93,26 @@ const sendMessage = (data, body) => {
   });
 };
 
+const saveReadMessages = async (conversationId) => {
+  const { data } = await axios.patch(`/api/conversations/${conversationId}/read`);
+
+  return data.read;
+}
+
+const sendReadMessages = (conversationId, userId) => {
+  console.log("sendRead", conversationId, userId);
+};
+
 // message format to send: {recipientId, text, conversationId}
 // conversationId will be set to null if its a brand new conversation
-export const postMessage = (body) => async (dispatch) => {
+export const postMessage = (body, userId) => async (dispatch) => {
   try {
     const data = await saveMessage(body);
 
     if (!body.conversationId) {
       dispatch(addConversation(body.recipientId, data.message));
     } else {
-      dispatch(setNewMessage(data.message));
+      dispatch(setNewMessage(data.message, null, userId));
     }
 
     sendMessage(data, body);
@@ -114,6 +125,21 @@ export const searchUsers = (searchTerm) => async (dispatch) => {
   try {
     const { data } = await axios.get(`/api/users/${searchTerm}`);
     dispatch(setSearchedUsers(data));
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+
+// set read status of all messages in the conversations to true
+export const readMessages = (conversationId, userId) => async (dispatch) => {
+  try {
+    const read = await saveReadMessages(conversationId);
+
+    if (read > 0) {
+      dispatch(setReadMessages(conversationId, userId));
+      sendReadMessages(conversationId, userId);
+    }
   } catch (error) {
     console.error(error);
   }

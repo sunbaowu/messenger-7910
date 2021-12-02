@@ -1,4 +1,16 @@
-export const addMessageToStore = (state, payload) => {
+const countUnreadMessages = (convo, userId) => {
+  let count = 0;
+
+  convo.messages.forEach((message) => {
+    if (message.senderId !== userId && message.read === false) {
+      count++;
+    }
+  });
+
+  return count;
+};
+
+export const addMessageToStore = (state, payload, userId) => {
   const { message, sender } = payload;
   // if sender isn't null, that means the message needs to be put in a brand new convo
   if (sender !== null) {
@@ -8,6 +20,8 @@ export const addMessageToStore = (state, payload) => {
       messages: [message],
     };
     newConvo.latestMessageText = message.text;
+
+    newConvo.unreadCount = countUnreadMessages(newConvo, userId);
     return [newConvo, ...state];
   }
 
@@ -19,6 +33,7 @@ export const addMessageToStore = (state, payload) => {
         messages: [...convo.messages, message],
         latestMessageText: message.text
       };
+      newConvo.unreadCount = countUnreadMessages(newConvo, userId);
       return newConvo;
     } else {
       return convo;
@@ -70,6 +85,14 @@ export const addSearchedUsersToStore = (state, users) => {
   return newState;
 };
 
+export const setConvosToStore = (conversations, userId) => {
+  conversations.forEach(conversation => {
+    conversation.messages = conversation.messages.reverse();
+    conversation.unreadCount = countUnreadMessages(conversation, userId);
+  });
+  return conversations;
+};
+
 export const addNewConvoToStore = (state, recipientId, message) => {
   return state.map((convo) => {
     if (convo.otherUser.id === recipientId) {
@@ -77,8 +100,51 @@ export const addNewConvoToStore = (state, recipientId, message) => {
       const newConvo = {
         ...convo,
         messages: [...convo.messages, message],
-        latestMessageText: message.text
+        latestMessageText: message.text,
+        unreadCount: 0,
       };
+
+      return newConvo;
+    } else {
+      return convo;
+    }
+  });
+};
+
+export const readMessagesInStore = (state, conversationId, userId) => {
+  return state.map((convo) => {
+    if (convo.id === conversationId) {
+      const newConvo = {
+        ...convo,
+        unreadCount: 0
+      };
+
+      newConvo.messages.forEach((message) => {
+        if (message.senderId !== userId && message.read === false) {
+          message.read = true;
+        }
+      });
+
+      return newConvo;
+    } else {
+      return convo;
+    }
+  });
+};
+
+
+export const readByReceiverMessagesInStore = (state, conversationId, userId) => {
+  return state.map((convo) => {
+    if (convo.id === conversationId) {
+      const newConvo = {
+        ...convo
+      };
+
+      newConvo.messages.forEach((message) => {
+        if (message.senderId === userId && message.read === false) {
+          message.read = true;
+        }
+      });
 
       return newConvo;
     } else {
