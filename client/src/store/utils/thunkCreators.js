@@ -93,11 +93,28 @@ const sendMessage = (data, body) => {
   });
 };
 
-const saveReadMessages = async (conversationId) => {
-  const { data } = await axios.patch(`/api/conversations/${conversationId}/read`);
+const saveReadMessages = async (conversation, userId) => {
+  const messages = conversation.messages;
+  let lastRead = 0;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].senderId !== userId) {
+      lastRead = messages[i].id;
+      break;
+    }
+  }
 
-  return data.read;
+  const { data } = await axios.patch(`/api/conversations/${conversation.id}/read`, { lastRead });
+
+  return data.lastRead;
 }
+
+const sendReadMessage = (conversationId, lastRead, userId) => {
+  socket.emit("read-messages", {
+    conversationId,
+    lastRead,
+    userId,
+  });
+};
 
 // message format to send: {recipientId, text, conversationId}
 // conversationId will be set to null if its a brand new conversation
@@ -126,15 +143,13 @@ export const searchUsers = (searchTerm) => async (dispatch) => {
   }
 };
 
-
-// set read status of all messages in the conversations to true
-export const readMessages = (conversationId, userId) => async (dispatch) => {
+export const readMessages = (conversation, userId) => async (dispatch) => {
   try {
-    const read = await saveReadMessages(conversationId);
+    const lastRead = await saveReadMessages(conversation, userId);
 
-    if (read > 0) {
-      dispatch(setReadMessages(conversationId, userId));
-    }
+    dispatch(setReadMessages(conversation.id, lastRead));
+
+    sendReadMessage(conversation.id, lastRead, userId);
   } catch (error) {
     console.error(error);
   }

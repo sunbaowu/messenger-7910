@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Typography } from "@material-ui/core";
+import { Chip, Box, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 
 const useStyles = makeStyles((theme) => ({
@@ -18,13 +18,13 @@ const useStyles = makeStyles((theme) => ({
     color: "#9CADC8",
     letterSpacing: -0.17,
   },
+  previewTextUnread: {
+    fontSize: 12,
+    color: "#000000",
+    letterSpacing: -0.17,
+    fontWeight: "bold"
+  },
   unreadCount: {
-    height: "30px",
-    borderRadius: "15px",
-    paddingTop: "3px",
-    paddingBottom: "3px",
-    paddingLeft: "10px",
-    paddingRight: "10px",
     backgroundImage: "linear-gradient(225deg, #6CC1FF 0%, #3A8DFF 100%)",
     color: "white",
     fontWeight: "bold",
@@ -43,15 +43,11 @@ const ChatContent = (props) => {
         <Typography className={classes.username}>
           {otherUser.username}
         </Typography>
-        <Typography className={classes.previewText}>
+        <Typography className={unreadCount > 0 ? classes.previewTextUnread : classes.previewText}>
           {latestMessageText}
         </Typography>
       </Box>
-      {unreadCount > 0 ? (<Box>
-        <Typography className={classes.unreadCount}>
-          {unreadCount || 0}
-        </Typography>
-      </Box>) : <></>}
+      {unreadCount > 0 && (<Chip className={classes.unreadCount} label={unreadCount || 0} />)}
     </Box>
   );
 };

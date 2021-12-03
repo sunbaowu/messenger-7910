@@ -1,11 +1,16 @@
 const countUnreadMessages = (convo, userId) => {
   let count = 0;
 
-  convo.messages.forEach((message) => {
-    if (message.senderId !== userId && message.read === false) {
-      count++;
+  for (let i = convo.messages.length - 1; i >= 0; i--) {
+    const message = convo.messages[i];
+    if (message.id > convo.lastRead) {
+      if (message.senderId !== userId) {
+        count++;
+      }
+    } else {
+      break;
     }
-  });
+  }
 
   return count;
 };
@@ -108,21 +113,28 @@ export const addNewConvoToStore = (state, recipientId, message) => {
   });
 };
 
-export const readMessagesInStore = (state, conversationId, userId) => {
+export const readMessagesInStore = (state, conversationId, lastRead) => {
   return state.map((convo) => {
     if (convo.id === conversationId) {
-      const newConvo = {
-        ...convo,
-        unreadCount: 0
-      };
+      const convoCopy = { ...convo };
+      convoCopy.lastRead = lastRead;
+      convoCopy.unreadCount = countUnreadMessages(convoCopy, convoCopy.lastRead);
 
-      newConvo.messages.forEach((message) => {
-        if (message.senderId !== userId && message.read === false) {
-          message.read = true;
-        }
-      });
+      return convoCopy;
+    } else {
+      return convo;
+    }
+  });
+};
 
-      return newConvo;
+
+export const otherUserReadMessagesInStore = (state, conversationId, lastRead) => {
+  return state.map((convo) => {
+    if (convo.id === conversationId) {
+      const convoCopy = { ...convo };
+      convoCopy.otherUserLastRead = lastRead;
+
+      return convoCopy;
     } else {
       return convo;
     }

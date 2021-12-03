@@ -18,7 +18,7 @@ router.get("/", async (req, res, next) => {
           user2Id: userId,
         },
       },
-      attributes: ["id"],
+      attributes: ["id", "user1LastRead", "user2LastRead"],
       order: [[Message, "createdAt", "DESC"]],
       include: [
         { model: Message, order: ["createdAt", "DESC"] },
@@ -54,10 +54,18 @@ router.get("/", async (req, res, next) => {
       // set a property "otherUser" so that frontend will have easier access
       if (convoJSON.user1) {
         convoJSON.otherUser = convoJSON.user1;
+        convoJSON.otherUserLastRead = convoJSON.user1LastRead;
+        convoJSON.lastRead = convoJSON.user2LastRead;
         delete convoJSON.user1;
+        delete convoJSON.user1LastRead;
+        delete convoJSON.user2LastRead;
       } else if (convoJSON.user2) {
         convoJSON.otherUser = convoJSON.user2;
+        convoJSON.otherUserLastRead = convoJSON.user2LastRead;
+        convoJSON.lastRead = convoJSON.user1LastRead;
         delete convoJSON.user2;
+        delete convoJSON.user1LastRead;
+        delete convoJSON.user2LastRead;
       }
 
       // set property for online status of the other user
@@ -85,18 +93,30 @@ router.patch("/:conversationId/read", async (req, res, next) => {
       return res.sendStatus(401);
     }
     const userId = req.user.id;
-    const { conversationId } = req.params;
-    const readCount = await Message.update({
-      read: true,
-    }, {
+    const conversationId = parseInt(req.params.conversationId);
+    const { lastRead } = req.body;
+
+    const conversation = await Conversation.findOne({
       where: {
-        conversationId: parseInt(conversationId),
-        read: false,
-        [Op.not]: [{ senderId: userId }]
-      },
+        id: conversationId
+      }
     });
 
-    res.json({ read: readCount[0] });
+    if (
+      conversation &&
+      (conversation.user1Id === userId || conversation.user2Id === userId)
+    ) {
+      await Conversation.update({
+        [conversation.user1Id === userId ? "user1LastRead" : "user2LastRead"]: lastRead,
+      }, {
+        where: {
+          id: conversationId
+        },
+      });
+      res.json({ lastRead });
+    } else {
+      res.sendStatus(401);
+    }
   } catch (error) {
     next(error);
   }

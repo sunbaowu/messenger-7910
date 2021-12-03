@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import { Box } from "@material-ui/core";
 import { Input, Header, Messages } from "./index";
@@ -25,20 +25,17 @@ const ActiveChat = (props) => {
   const classes = useStyles();
   const { user, readMessages } = props;
   const conversation = useMemo(() => (props.conversation || {}), [props.conversation]);
-  const timer = useRef(null);
 
   useEffect(() => {
-    if (timer.current) {
-      clearTimeout(timer.current);
-    }
+    let timer = null;
     if (conversation.unreadCount && user.id) {
-      timer.current = setTimeout(() => {
+      timer = setTimeout(() => {
         readMessages(conversation, user.id);
       }, 2000);
     }
     return () => {
-      if (timer.current) {
-        clearTimeout(timer.current);
+      if (timer) {
+        clearTimeout(timer);
       }
     }
   }, [conversation, user, readMessages]);
@@ -55,6 +52,7 @@ const ActiveChat = (props) => {
             <Messages
               messages={conversation.messages}
               otherUser={conversation.otherUser}
+              otherUserLastRead={conversation.otherUserLastRead}
               userId={user.id}
             />
             <Input
@@ -85,7 +83,7 @@ const mapDispatchToProps = (dispatch) => {
   return {
     readMessages: (conversation, userId) => {
       if (conversation.unreadCount > 0) {
-        dispatch(readMessages(conversation.id, userId));
+        dispatch(readMessages(conversation, userId));
       }
     },
   };
