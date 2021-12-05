@@ -1,6 +1,7 @@
 const db = require("./db");
 const { User } = require("./models");
 const Conversation = require("./models/conversation");
+const ConversationUser = require("./models/conversationUser");
 const Message = require("./models/message");
 
 async function seed() {
