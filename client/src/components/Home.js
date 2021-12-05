@@ -26,8 +26,10 @@ const Home = (props) => {
   }, [user.id]);
 
   useEffect(() => {
-    fetchConversations();
-  }, [fetchConversations]);
+    if (user.id) {
+      fetchConversations(user.id);
+    }
+  }, [fetchConversations, user]);
 
   if (!user.id) {
     // If we were previously logged in, redirect to login instead of register
@@ -67,8 +69,8 @@ const mapDispatchToProps = (dispatch) => {
       dispatch(logout(id));
       dispatch(clearOnLogout());
     },
-    fetchConversations: () => {
-      dispatch(fetchConversations());
+    fetchConversations: (userId) => {
+      dispatch(fetchConversations(userId));
     }
   };
 };

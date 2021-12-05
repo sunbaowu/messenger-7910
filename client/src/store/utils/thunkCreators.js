@@ -5,6 +5,7 @@ import {
   addConversation,
   setNewMessage,
   setSearchedUsers,
+  setReadMessages,
 } from "../conversations";
 import { gotUser, setFetchingStatus } from "../user";
 
@@ -69,11 +70,11 @@ export const logout = (id) => async (dispatch) => {
 
 // CONVERSATIONS THUNK CREATORS
 
-export const fetchConversations = () => async (dispatch) => {
+export const fetchConversations = (userId) => async (dispatch) => {
   try {
     const { data } = await axios.get("/api/conversations");
 
-    dispatch(gotConversations(data));
+    dispatch(gotConversations(data, userId));
   } catch (error) {
     console.error(error);
   }
@@ -92,16 +93,39 @@ const sendMessage = (data, body) => {
   });
 };
 
+const saveReadMessages = async (conversation, userId) => {
+  const messages = conversation.messages;
+  let lastRead = 0;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].senderId !== userId) {
+      lastRead = messages[i].id;
+      break;
+    }
+  }
+
+  const { data } = await axios.patch(`/api/conversations/${conversation.id}/read`, { lastRead });
+
+  return data.lastRead;
+}
+
+const sendReadMessage = (conversationId, lastRead, userId) => {
+  socket.emit("read-messages", {
+    conversationId,
+    lastRead,
+    userId,
+  });
+};
+
 // message format to send: {recipientId, text, conversationId}
 // conversationId will be set to null if its a brand new conversation
-export const postMessage = (body) => async (dispatch) => {
+export const postMessage = (body, userId) => async (dispatch) => {
   try {
     const data = await saveMessage(body);
 
     if (!body.conversationId) {
       dispatch(addConversation(body.recipientId, data.message));
     } else {
-      dispatch(setNewMessage(data.message));
+      dispatch(setNewMessage(data.message, null, userId));
     }
 
     sendMessage(data, body);
@@ -114,6 +138,18 @@ export const searchUsers = (searchTerm) => async (dispatch) => {
   try {
     const { data } = await axios.get(`/api/users/${searchTerm}`);
     dispatch(setSearchedUsers(data));
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+export const readMessages = (conversation, userId) => async (dispatch) => {
+  try {
+    const lastRead = await saveReadMessages(conversation, userId);
+
+    dispatch(setReadMessages(conversation.id, lastRead));
+
+    sendReadMessage(conversation.id, lastRead, userId);
   } catch (error) {
     console.error(error);
   }
