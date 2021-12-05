@@ -115,7 +115,7 @@ router.patch("/:conversationId/read", async (req, res, next) => {
       });
       res.json({ lastRead });
     } else {
-      res.sendStatus(401);
+      res.sendStatus(403);
     }
   } catch (error) {
     next(error);
